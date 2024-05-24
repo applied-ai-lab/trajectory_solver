@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>trajectory_solver</name>
+  <version>1.1.0</version>
+  <description>Trajectory Solver Package</description>
+
+  <license>BSD</license>
+
+  <maintainer email="mitch@robots.ox.ac.uk">Alexander Mitchell</maintainer>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <exec_depend>numpy</exec_depend>
+  <exec_depend>osqp</exec_depend>
+</package>
