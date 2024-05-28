@@ -17,7 +17,7 @@ def main():
     N = 5
 
     # No. constraints
-    num_constra = 6
+    num_constra = 7
 
     splineConstraint = SplineConstraints(N)
     print(splineConstraint.pos_constraint(0.0))
@@ -45,6 +45,7 @@ def main():
     # End constraints
     constraint_list.append(splineConstraint.pos_constraint(1.0))
     constraint_list.append(splineConstraint.vel_constraint(1.0))
+    constraint_list.append(splineConstraint.acc_constraint(1.0))
 
     A_np = np.vstack(constraint_list)
     A = sparse.csc_matrix(A_np)
@@ -56,6 +57,7 @@ def main():
     l[3] = 0.5
     l[4] = 1.0
     l[5] = 0.0
+    l[6] = 0.0
     # Set as equality constraints
     u = l
 
@@ -69,7 +71,7 @@ def main():
 
     print(res.x)
 
-    num_nodes = 10
+    num_nodes = 100
     t = np.linspace(0.0, 1.0, num_nodes)
 
     spline_impl = Splines(N, res.x)
@@ -86,14 +88,15 @@ def main():
         acc[k] = spline_impl.acc(t[k])
 
     # Second spline
-    A[3, :] = splineConstraint.pos_constraint(0.4)
+    A[3, :] = splineConstraint.pos_constraint(0.5)
     # Upper and Lower bounds
     l[0] = pos[num_nodes - 1]
     l[1] = vel[num_nodes - 1]
     l[2] = acc[num_nodes - 1]
-    l[3] = 1.3
+    l[3] = 1.5
     l[4] = 2.0
     l[5] = 0.0
+    l[6] = 0.0
     # Set as equality constraints
     u = l
 
