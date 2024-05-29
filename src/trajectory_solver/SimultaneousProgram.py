@@ -1,17 +1,16 @@
-from typing import List
+from typing import List, Dict
 
 import numpy as np
 from scipy import sparse
 
 from trajectory_solver.QPcoeffs import QPcoeffs
-from trajectory_solver.SplineConstraints import TemporalConstraint, SplineConstraints
-from trajectory_solver.SplineConstraints import ConstraintType
+from trajectory_solver.SplineConstraints import TemporalConstraint, SplineConstraints, ConstraintType
 
 
 class NamedTemporalConstraint:
-    def __init__(self, name: str, constraint_lst: List[TemporalConstraint]) -> None:
+    def __init__(self, name: str, constraint_dict: Dict[str, TemporalConstraint]) -> None:
         self.name = name
-        self.constraint_list = constraint_lst
+        self.constraint_dict = constraint_dict
 
 
 class ArrayIndex:
@@ -40,8 +39,9 @@ class SimultaneousProgram(QPcoeffs):
         super().__init__(None, None, None, None, None)
 
         self.constraint_map = dict()
-        self.constraint_indices = dict()
+        self.constraint_indices = dict() # This will contain QPindices
 
+        # The spline order
         self.N = N
 
         self.no_constraints = 0
@@ -55,8 +55,8 @@ class SimultaneousProgram(QPcoeffs):
         self.constraint_map = dict()
         self.no_constraints = 0
         for constraint in named_constraints:
-            self.constraint_map[constraint.name] = self.spline_constraint.create_qp(constraint.constraint_list)
-            self.no_constraints += len(constraint.constraint_list)
+            self.constraint_map[constraint.name] = self.spline_constraint.create_qp(constraint.constraint_dict.values())
+            self.no_constraints += len(constraint.constraint_dict.values())
         # Create the large constraint map
         self.no_decision_var = (self.N + 1) * len(named_constraints)
         
@@ -109,10 +109,15 @@ class SimultaneousProgram(QPcoeffs):
     def initialise(self):
         return
     
-    def advance(self, row:int, named_constraints: List[NamedTemporalConstraint]):
+    def advance(self, named_constraints: List[NamedTemporalConstraint]):
         for constraints in named_constraints:
-            for constraint in constraints:
-                self.spline_constraint.advance_qp(row, self.constraint_map[constraint.name], constraint)
+            for _, constraint in constraints.constraint_dict.items():
+                self.spline_constraint.advance_qp(constraint.row, self.constraint_map[constraints.name], constraint)
+            # Update the global constraints
+            indices = self.constraint_indices[constraints.name]
+            self._A[indices.A.row.start: indices.A.row.stop, indices.A.col.start: indices.A.col.stop] = self.constraint_map[constraints.name].A
+            self._l[indices.l.start: indices.l.stop] = self.constraint_map[constraints.name].l
+            self._u[indices.u.start: indices.u.stop] = self.constraint_map[constraints.name].u
         return
     
     def reset(self):

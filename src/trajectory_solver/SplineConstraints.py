@@ -21,6 +21,7 @@ class TemporalConstraint:
                  u: float,
                  l: float, 
                  type: ConstraintType) -> None:
+        self.row = None # This value is updated once the constraints are made
         self.t = t
         self.type = type
         self.u = u
@@ -50,7 +51,7 @@ class SplineConstraints(Splines):
         # Create constraints
         l = np.zeros(len(constraints))
         u = np.zeros(len(constraints))
-        A_np = np.zeros((len(constraints, self._N + 1)))
+        A_np = np.zeros((len(constraints), self._N + 1))
         # To do set the these elsewhere: create the costs
         P = sparse.eye(self._N + 1) 
         q = np.zeros(self._N + 1)
@@ -59,6 +60,7 @@ class SplineConstraints(Splines):
             A_np[row, :] = self.constraint_map[constraint.type](constraint.t)
             l[row] = constraint.l
             u[row] = constraint.u
+            constraint.row = row
         # Spline constraints
         A = sparse.csc_matrix(A_np)
 
