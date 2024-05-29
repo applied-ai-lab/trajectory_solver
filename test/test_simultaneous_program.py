@@ -27,7 +27,7 @@ def test():
     N = 5
 
     # Spline Constraints
-    spline_program = SimultaneousProgram(N)
+    spline_program = SimultaneousProgram(N, const_A=True)
     spline_program.create(named_constraints)
 
     # Update the constraints
@@ -76,7 +76,7 @@ def test():
     np.testing.assert_allclose(spline_program.u[0:7], u_0, rtol=1e-3, atol=0)
 
     # Testing Lower Right
-    np.testing.assert_allclose(spline_program.A.todense()[7:, 6:], A_1, rtol=1e-3, atol=0) 
+    np.testing.assert_allclose(spline_program.A.todense()[7:, 6:], A_0, rtol=1e-3, atol=0) 
     np.testing.assert_allclose(spline_program.l[7:], l_1, rtol=1e-3, atol=0) 
     np.testing.assert_allclose(spline_program.u[7:], u_1, rtol=1e-3, atol=0)
 

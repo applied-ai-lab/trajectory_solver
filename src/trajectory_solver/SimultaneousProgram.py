@@ -35,14 +35,15 @@ class QPIndicies:
 
 
 class SimultaneousProgram(QPcoeffs):
-    def __init__(self, N):
-        super().__init__(None, None, None, None, None)
+    def __init__(self, N: int, const_A: bool):
+        super().__init__()
 
         self.constraint_map = dict()
         self.constraint_indices = dict() # This will contain QPindices
 
         # The spline order
         self.N = N
+        self.const_A = const_A
 
         self.no_constraints = 0
         self.no_decision_var = 0
@@ -55,7 +56,7 @@ class SimultaneousProgram(QPcoeffs):
         self.constraint_map = dict()
         self.no_constraints = 0
         for constraint in named_constraints:
-            self.constraint_map[constraint.name] = self.spline_constraint.create_qp(constraint.constraint_dict)
+            self.constraint_map[constraint.name] = self.spline_constraint.create_qp(constraint.constraint_dict, self.const_A)
             self.no_constraints += len(constraint.constraint_dict.values())
         # Create the large constraint map
         self.no_decision_var = (self.N + 1) * len(named_constraints)
@@ -103,7 +104,10 @@ class SimultaneousProgram(QPcoeffs):
             row += item.A.shape[0]
             col += item.A.shape[1]
 
-        self._A = sparse.lil_matrix(A_np)
+        if self.const_A:
+            self._A = sparse.csc_matrix(A_np)
+        else:
+            self._A = sparse.lil_matrix(A_np)
         return
     
     def initialise(self):
@@ -115,7 +119,8 @@ class SimultaneousProgram(QPcoeffs):
                 self.spline_constraint.advance_qp(constraint.row, self.constraint_map[constraints.name], constraint)
             # Update the global constraints
             indices = self.constraint_indices[constraints.name]
-            self._A[indices.A.row.start: indices.A.row.stop, indices.A.col.start: indices.A.col.stop] = self.constraint_map[constraints.name].A
+            if not self.const_A:
+                self._A[indices.A.row.start: indices.A.row.stop, indices.A.col.start: indices.A.col.stop] = self.constraint_map[constraints.name].A
             self._l[indices.l.start: indices.l.stop] = self.constraint_map[constraints.name].l
             self._u[indices.u.start: indices.u.stop] = self.constraint_map[constraints.name].u
         return

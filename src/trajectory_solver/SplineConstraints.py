@@ -47,7 +47,7 @@ class SplineConstraints(Splines):
         self._time_acc(t)
         return copy.deepcopy(self._ddt.reshape(1, -1))
     
-    def create_qp(self, constraints: Dict[str, TemporalConstraint]) -> QPcoeffs:
+    def create_qp(self, constraints: Dict[str, TemporalConstraint], const_A=False) -> QPcoeffs:
         # Create constraints
         l = np.zeros(len(constraints.values()))
         u = np.zeros(len(constraints.values()))
@@ -62,12 +62,16 @@ class SplineConstraints(Splines):
             u[row] = constraint.u
             constraint.row = row
         # Spline constraints
-        A = sparse.lil_matrix(A_np)
-
-        return QPcoeffs(P, q, A, l, u)
+        if const_A:
+            A = sparse.csc_matrix(A_np)
+        else:
+            A = sparse.lil_matrix(A_np)
+        
+        return QPcoeffs(P, q, A, l, u, const_A)
 
     def advance_qp(self, row: int, qp_coeffs: QPcoeffs, time_constraint: TemporalConstraint) -> None:
-        qp_coeffs.A[row, :] = self.constraint_map[time_constraint.type](time_constraint.t)
+        if not qp_coeffs.const_A:
+            qp_coeffs.A[row, :] = self.constraint_map[time_constraint.type](time_constraint.t)
         qp_coeffs.l[row] = time_constraint.l
         qp_coeffs.u[row] = time_constraint.u
         return 

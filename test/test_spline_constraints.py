@@ -10,7 +10,7 @@ def test():
         "pos_0": TemporalConstraint(t=0.0, u=0.0, l=0.0, type=ConstraintType.POS),
         "vel_0": TemporalConstraint(t=0.0, u=0.0, l=0.0, type=ConstraintType.VEL),
         "acc_0": TemporalConstraint(t=0.0, u=0.0, l=0.0, type=ConstraintType.ACC),
-        "pos_05": TemporalConstraint(t=0.0, u=0.5, l=0.5, type=ConstraintType.POS),
+        "pos_05": TemporalConstraint(t=0.5, u=0.5, l=0.5, type=ConstraintType.POS),
         "pos_1": TemporalConstraint(t=1.0, u=1.0, l=1.0, type=ConstraintType.POS),
         "vel_1": TemporalConstraint(t=1.0, u=0.0, l=0.0, type=ConstraintType.VEL),
         "acc_1": TemporalConstraint(t=1.0, u=0.0, l=0.0, type=ConstraintType.ACC)
@@ -26,7 +26,7 @@ def test():
     A_tar = np.array([[ 0.,  0.,  0.,  0.,  0.,  1.],
                       [ 0.,  0.,  0.,  0.,  1.,  0.],
                       [ 0.,  0.,  0.,  2.,  0.,  0.],
-                      [ 0.,  0.,  0.,  0.,  0.,  1.],
+                      [ 0.03125,  0.0625 ,  0.125  ,  0.25   ,  0.5    ,  1.],
                       [ 1.,  1.,  1.,  1.,  1.,  1.],
                       [ 5.,  4.,  3.,  2.,  1.,  0.],
                       [20., 12.,  6.,  2.,  0.,  0.]])
@@ -39,32 +39,31 @@ def test():
 
     # Update the constraints
     constraint_dict["pos_0"].u, constraint_dict["pos_0"].l = 1.0, 1.0
-    constraint_dict["pos_0"].t = 1.0
+    constraint_dict["pos_0"].t = 0.0
 
-    constraint_dict["vel_0"].t = 1.0
-    constraint_dict["acc_0"].t = 1.0
+    constraint_dict["vel_0"].t = 0.0
+    constraint_dict["acc_0"].t = 0.0
 
     constraint_dict["pos_05"].u, constraint_dict["pos_05"].l = 1.5, 1.5
-    constraint_dict["pos_05"].t = 1.5
+    constraint_dict["pos_05"].t = 0.5
 
     constraint_dict["pos_1"].u, constraint_dict["pos_1"].l = 2.0, 2.0
-    constraint_dict["pos_1"] = 2.0
+    constraint_dict["pos_1"].t = 1.0
 
-    constraint_dict["vel_1"].t = 2.0
-    constraint_dict["acc_1"].t = 2.0
-
+    constraint_dict["vel_1"].t = 1.0
+    constraint_dict["acc_1"].t = 1.0
 
     for _, constraint in constraint_dict.items():
         spline_constraints.advance_qp(constraint.row, program_matrices, constraint)
 
     # Write out the target matrices
-    A_tar = np.array([[ 1.,  1.,  1.,  1.,  1.,  1.],
-                      [ 5.,  4.,  3.,  2.,  1.,  0.],
-                      [20., 12.,  6.,  2.,  0.,  0.],
-                      [ 7.59375, 5.0625, 3.375, 2.25, 1.5, 1.],
-                      [ 1.,  1.,  1.,  1.,  1.,  1.],
-                      [ 80.,  32.,  12.,  4.,  1.,  0.],
-                      [160., 48.,  12.,  2.,  0.,  0.]])
+    # A_tar = np.array([[ 1.,  1.,  1.,  1.,  1.,  1.],
+    #                   [ 5.,  4.,  3.,  2.,  1.,  0.],
+    #                   [20., 12.,  6.,  2.,  0.,  0.],
+    #                   [ 7.59375, 5.0625, 3.375, 2.25, 1.5, 1.],
+    #                   [ 1.,  1.,  1.,  1.,  1.,  1.],
+    #                   [ 80.,  32.,  12.,  4.,  1.,  0.],
+    #                   [160., 48.,  12.,  2.,  0.,  0.]])
     l_tar = np.array([1., 0., 0., 1.5, 2., 0., 0.])
     u_tar = l_tar
 

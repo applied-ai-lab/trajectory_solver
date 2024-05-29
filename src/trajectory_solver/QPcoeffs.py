@@ -1,10 +1,12 @@
 class QPcoeffs:
-    def __init__(self, P=None, q=None, A=None, l=None, u=None):
+    def __init__(self, P=None, q=None, A=None, l=None, u=None, const_A=False):
         self._P = P
         self._q = q
         self._A = A
         self._l = l
         self._u = u
+        # Update A matrix
+        self._const_A = const_A
 
     # Getters 
     @property
@@ -27,6 +29,10 @@ class QPcoeffs:
     def u(self):
         return self._u
     
+    @property
+    def const_A(self):
+        return self._const_A
+    
     # Setters
     @P.setter
     def P(self, P_mat):
@@ -47,3 +53,7 @@ class QPcoeffs:
     @u.setter
     def u(self, u_vec):
         self._u = u_vec
+
+    @const_A.setter
+    def const_A(self, value):
+        self._const_A = value
