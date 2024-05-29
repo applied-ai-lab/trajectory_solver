@@ -55,7 +55,7 @@ class SimultaneousProgram(QPcoeffs):
         self.constraint_map = dict()
         self.no_constraints = 0
         for constraint in named_constraints:
-            self.constraint_map[constraint.name] = self.spline_constraint.create_qp(constraint.constraint_dict.values())
+            self.constraint_map[constraint.name] = self.spline_constraint.create_qp(constraint.constraint_dict)
             self.no_constraints += len(constraint.constraint_dict.values())
         # Create the large constraint map
         self.no_decision_var = (self.N + 1) * len(named_constraints)
@@ -103,7 +103,7 @@ class SimultaneousProgram(QPcoeffs):
             row += item.A.shape[0]
             col += item.A.shape[1]
 
-        self._A = sparse.csc_matrix(A_np)
+        self._A = sparse.lil_matrix(A_np)
         return
     
     def initialise(self):

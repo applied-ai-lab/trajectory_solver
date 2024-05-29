@@ -1,6 +1,6 @@
 import copy
 from enum import Enum
-from typing import List
+from typing import Dict
 
 import numpy as np
 from scipy import sparse
@@ -47,22 +47,22 @@ class SplineConstraints(Splines):
         self._time_acc(t)
         return copy.deepcopy(self._ddt.reshape(1, -1))
     
-    def create_qp(self, constraints: List[TemporalConstraint]) -> QPcoeffs:
+    def create_qp(self, constraints: Dict[str, TemporalConstraint]) -> QPcoeffs:
         # Create constraints
-        l = np.zeros(len(constraints))
-        u = np.zeros(len(constraints))
-        A_np = np.zeros((len(constraints), self._N + 1))
+        l = np.zeros(len(constraints.values()))
+        u = np.zeros(len(constraints.values()))
+        A_np = np.zeros((len(constraints.values()), self._N + 1))
         # To do set the these elsewhere: create the costs
         P = sparse.eye(self._N + 1) 
         q = np.zeros(self._N + 1)
 
-        for row, constraint in enumerate(constraints):
+        for row, constraint in enumerate(constraints.values()):
             A_np[row, :] = self.constraint_map[constraint.type](constraint.t)
             l[row] = constraint.l
             u[row] = constraint.u
             constraint.row = row
         # Spline constraints
-        A = sparse.csc_matrix(A_np)
+        A = sparse.lil_matrix(A_np)
 
         return QPcoeffs(P, q, A, l, u)
 

@@ -5,25 +5,22 @@ from trajectory_solver.SplineConstraints import (ConstraintType, TemporalConstra
 
 def test():
 
-    # Create the constraint list
-    pos_0 = TemporalConstraint(t=0.0, u=0.0, l=0.0, type=ConstraintType.POS)
-    vel_0 = TemporalConstraint(t=0.0, u=0.0, l=0.0, type=ConstraintType.VEL)
-    acc_0 = TemporalConstraint(t=0.0, u=0.0, l=0.0, type=ConstraintType.ACC)
-
-    pos_05 = TemporalConstraint(t=0.0, u=0.5, l=0.5, type=ConstraintType.POS)
-
-    pos_1 = TemporalConstraint(t=1.0, u=1.0, l=1.0, type=ConstraintType.POS)
-    vel_1 = TemporalConstraint(t=1.0, u=0.0, l=0.0, type=ConstraintType.VEL)
-    acc_1 = TemporalConstraint(t=1.0, u=0.0, l=0.0, type=ConstraintType.ACC)
-
-    # Constraint list
-    constraint_lst = [pos_0, vel_0, acc_0, pos_05, pos_1, vel_1, acc_1]
+        # Create the constraint list
+    constraint_dict = {
+        "pos_0": TemporalConstraint(t=0.0, u=0.0, l=0.0, type=ConstraintType.POS),
+        "vel_0": TemporalConstraint(t=0.0, u=0.0, l=0.0, type=ConstraintType.VEL),
+        "acc_0": TemporalConstraint(t=0.0, u=0.0, l=0.0, type=ConstraintType.ACC),
+        "pos_05": TemporalConstraint(t=0.0, u=0.5, l=0.5, type=ConstraintType.POS),
+        "pos_1": TemporalConstraint(t=1.0, u=1.0, l=1.0, type=ConstraintType.POS),
+        "vel_1": TemporalConstraint(t=1.0, u=0.0, l=0.0, type=ConstraintType.VEL),
+        "acc_1": TemporalConstraint(t=1.0, u=0.0, l=0.0, type=ConstraintType.ACC)
+    }
 
     # Spline Constraint Handler
     N = 5 # Spline order
     spline_constraints = SplineConstraints(N)
 
-    program_matrices = spline_constraints.create_qp(constraint_lst)
+    program_matrices = spline_constraints.create_qp(constraint_dict)
 
     # Write out the target matrices
     A_tar = np.array([[ 0.,  0.,  0.,  0.,  0.,  1.],
@@ -41,23 +38,23 @@ def test():
     np.testing.assert_allclose(program_matrices.u, u_tar, rtol=1e-3, atol=0)
 
     # Update the constraints
-    pos_0.u, pos_0.l = 1.0, 1.0
-    pos_0.t = 1.0
+    constraint_dict["pos_0"].u, constraint_dict["pos_0"].l = 1.0, 1.0
+    constraint_dict["pos_0"].t = 1.0
 
-    vel_0.t = 1.0
-    acc_0.t = 1.0
+    constraint_dict["vel_0"].t = 1.0
+    constraint_dict["acc_0"].t = 1.0
 
-    pos_05.u, pos_05.l = 1.5, 1.5
-    pos_05.t = 1.5
+    constraint_dict["pos_05"].u, constraint_dict["pos_05"].l = 1.5, 1.5
+    constraint_dict["pos_05"].t = 1.5
 
-    pos_1.u, pos_1.l = 2.0, 2.0
-    vel_1.t = 2.0
-    acc_1.t = 2.0
+    constraint_dict["pos_1"].u, constraint_dict["pos_1"].l = 2.0, 2.0
+    constraint_dict["pos_1"] = 2.0
 
-    # Constraint list
-    constraint_lst = [pos_0, vel_0, acc_0, pos_05, pos_1, vel_1, acc_1]
+    constraint_dict["vel_1"].t = 2.0
+    constraint_dict["acc_1"].t = 2.0
 
-    for constraint in constraint_lst:
+
+    for _, constraint in constraint_dict.items():
         spline_constraints.advance_qp(constraint.row, program_matrices, constraint)
 
     # Write out the target matrices
