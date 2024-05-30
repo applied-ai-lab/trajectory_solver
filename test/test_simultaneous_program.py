@@ -13,7 +13,7 @@ def test():
         "pos_0": TemporalConstraint(t=0.0, u=0.0, l=0.0, type=ConstraintType.POS),
         "vel_0": TemporalConstraint(t=0.0, u=0.0, l=0.0, type=ConstraintType.VEL),
         "acc_0": TemporalConstraint(t=0.0, u=0.0, l=0.0, type=ConstraintType.ACC),
-        "pos_05": TemporalConstraint(t=0.0, u=0.5, l=0.5, type=ConstraintType.POS),
+        "pos_05": TemporalConstraint(t=0.5, u=0.5, l=0.5, type=ConstraintType.POS),
         "pos_1": TemporalConstraint(t=1.0, u=1.0, l=1.0, type=ConstraintType.POS),
         "vel_1": TemporalConstraint(t=1.0, u=0.0, l=0.0, type=ConstraintType.VEL),
         "acc_1": TemporalConstraint(t=1.0, u=0.0, l=0.0, type=ConstraintType.ACC)
