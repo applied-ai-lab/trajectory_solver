@@ -3,6 +3,7 @@ import copy
 from enum import Enum
 
 import numpy as np
+import osqp
 
 from trajectory_solver.SimultaneousProgram import (SimultaneousProgram, NamedTemporalConstraint, 
                                                    TemporalConstraint, ConstraintType)
@@ -40,8 +41,8 @@ class EndPointProblem:
         "pos_00": TemporalConstraint(t=0.0, u=0.0, l=0.0, type=ConstraintType.POS),
         "vel_00": TemporalConstraint(t=0.0, u=0.0, l=0.0, type=ConstraintType.VEL),
         "acc_00": TemporalConstraint(t=0.0, u=0.0, l=0.0, type=ConstraintType.ACC),
-        "pos_05": TemporalConstraint(t=0.5, u=0.5, l=0.5, type=ConstraintType.POS),
-        "pos_10": TemporalConstraint(t=1.0, u=1.0, l=1.0, type=ConstraintType.POS),
+        # "pos_05": TemporalConstraint(t=0.4, u=0.5, l=0.5, type=ConstraintType.POS),
+        "pos_10": TemporalConstraint(t=0.8, u=1.0, l=1.0, type=ConstraintType.POS),
         "vel_10": TemporalConstraint(t=1.0, u=0.0, l=0.0, type=ConstraintType.VEL),
         "acc_10": TemporalConstraint(t=1.0, u=0.0, l=0.0, type=ConstraintType.ACC)
     }
@@ -94,10 +95,19 @@ class PoseProblem:
         self.named_constraints = self.create_named_constraints()
 
         self.program = SimultaneousProgram(N, const_A=const_A)
+        # Create an OSQP object
+        self._prob = osqp.OSQP()
     
     # Base methods
-    def create(self):
+    def create(self, verbose=False):
         self.program.create(self.named_constraints.values())
+        self._prob.setup(P=self.program.P, 
+                         q=self.program.q, 
+                         A=self.program.A, 
+                         l=self.program.l, 
+                         u=self.program.u, 
+                         verbose=verbose)
+        self._res = self._prob.solve()
         return
     
     def initialise(self):
@@ -107,11 +117,20 @@ class PoseProblem:
         return
 
     def advance(self, end_point_poses: Dict[HandEnum, EndPointPose]):
+        # Update the constraints
         for key, item in end_point_poses.items():
             for k in range(6):
                 self.update_constraints(k, self.named_constraints[self.namespaced_names_dict[key][k]], item)
+        # Advance the internal program matrices
         self.program.advance(self.named_constraints.values())
-        return
+        
+        # Solve the optimisation
+        if self.program.const_A:
+            self._prob.update(l=self.program.l, u=self.program.u)
+        else:
+            self._prob.update(A=self.program.A, l=self.program.l, u=self.program.u)
+        self._res = self._prob.solve()
+        return self._res.x
     
     # Helper methods
     def create_named_constraints(self):
@@ -132,8 +151,8 @@ class PoseProblem:
         constraint_dict.constraint_dict["acc_00"].u = constraint_dict.constraint_dict["acc_00"].l
 
         # Mid pose
-        constraint_dict.constraint_dict["pos_05"].l = end_point_pose.mid_pose.pos[index]
-        constraint_dict.constraint_dict["pos_05"].u = constraint_dict.constraint_dict["pos_05"].l
+        # constraint_dict.constraint_dict["pos_05"].l = end_point_pose.mid_pose.pos[index]
+        # constraint_dict.constraint_dict["pos_05"].u = constraint_dict.constraint_dict["pos_05"].l
 
         # End pose
         constraint_dict.constraint_dict["pos_10"].l = end_point_pose.end_pose.pos[index]
@@ -144,4 +163,3 @@ class PoseProblem:
 
         constraint_dict.constraint_dict["acc_10"].l = end_point_pose.end_pose.acc[index]
         constraint_dict.constraint_dict["acc_10"].u = constraint_dict.constraint_dict["acc_10"].l
-

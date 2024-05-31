@@ -62,7 +62,7 @@ class SimultaneousProgram(QPcoeffs):
         self.no_decision_var = (self.N + 1) * len(named_constraints)
         
         # Create the init values
-        self._P = sparse.eye(self.no_decision_var)
+        P_np = np.eye(self.no_decision_var)
         self._q = np.zeros(self.no_decision_var)
 
         A_np = np.zeros([self.no_constraints, self.no_decision_var])
@@ -74,13 +74,14 @@ class SimultaneousProgram(QPcoeffs):
         for key, item in self.constraint_map.items():
             indices = QPIndicies()
             
+            P_np[col: col + item.P.shape[0], col: col + item.P.shape[1]] = item.P.todense()
             A_np[row: row + item.A.shape[0], col: col + item.A.shape[1]] = item.A.todense()
             self._l[row: row + item.l.shape[0]] = item.l
             self._u[row: row + item.u.shape[0]] = item.u
 
             # Update the indices
-            indices.P.row.start = row
-            indices.P.row.stop = row + item.P.shape[0]
+            indices.P.row.start = col # Columns refer to decision variables
+            indices.P.row.stop = col + item.P.shape[0]
             indices.P.col.start = col
             indices.P.col.stop = col + item.P.shape[1]
 
@@ -104,6 +105,7 @@ class SimultaneousProgram(QPcoeffs):
             row += item.A.shape[0]
             col += item.A.shape[1]
 
+        self._P = sparse.csc_matrix(P_np)
         if self.const_A:
             self._A = sparse.csc_matrix(A_np)
         else:

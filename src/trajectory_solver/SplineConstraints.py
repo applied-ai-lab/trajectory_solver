@@ -53,7 +53,9 @@ class SplineConstraints(Splines):
         u = np.zeros(len(constraints.values()))
         A_np = np.zeros((len(constraints.values()), self._N + 1))
         # To do set the these elsewhere: create the costs
-        P = sparse.eye(self._N + 1) 
+        P_np = np.eye(self._N + 1)
+
+        P = sparse.csc_matrix(P_np) 
         q = np.zeros(self._N + 1)
 
         for row, constraint in enumerate(constraints.values()):
