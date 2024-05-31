@@ -15,6 +15,13 @@ class PoseVelAcc:
         self.acc = acc
 
 
+class RelativeTimings:
+    def __init__(self, phase_offset=0.0, duration=20, dt=0.02) -> None:
+        self.phase_offset = phase_offset
+        self.duration = duration
+        self.dt = dt
+
+
 class EndPointPose:
     def __init__(self) -> None:
         self.init_pose = PoseVelAcc(np.zeros(6),

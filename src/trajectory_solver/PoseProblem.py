@@ -53,7 +53,7 @@ class DualArmNames:
 
 
 class PoseProblem:
-    def __init__(self, namespace:List[HandEnum], N=5, const_A=True) -> None:
+    def __init__(self, namespace:List[HandEnum], N=6, const_A=True) -> None:
         
         self.end_point_problem = EndPointProblem()
 
