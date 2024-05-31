@@ -1,37 +1,11 @@
 from typing import Dict, List
 import copy
-from enum import Enum
 
-import numpy as np
 import osqp
 
+from trajectory_solver.PoseTypes import (HandEnum, EndPointPose)
 from trajectory_solver.SimultaneousProgram import (SimultaneousProgram, NamedTemporalConstraint, 
                                                    TemporalConstraint, ConstraintType)
-
-
-class HandEnum(Enum):
-    LEFT =  "LEFT"
-    RIGHT = "RIGHT"
-
-
-class PoseVelAcc:
-    def __init__(self, pos: np.array, vel: np.array, acc: np.array) -> None:
-        self.pos = pos
-        self.vel = vel
-        self.acc = acc
-
-
-class EndPointPose:
-    def __init__(self) -> None:
-        self.init_pose = PoseVelAcc(np.zeros(6),
-                                    np.zeros(6),
-                                    np.zeros(6))
-        self.mid_pose = PoseVelAcc(np.zeros(6),
-                                   np.zeros(6),
-                                   np.zeros(6))
-        self.end_pose = PoseVelAcc(np.zeros(6),
-                                   np.zeros(6),
-                                   np.zeros(6))
 
 
 class EndPointProblem:
@@ -41,8 +15,8 @@ class EndPointProblem:
         "pos_00": TemporalConstraint(t=0.0, u=0.0, l=0.0, type=ConstraintType.POS),
         "vel_00": TemporalConstraint(t=0.0, u=0.0, l=0.0, type=ConstraintType.VEL),
         "acc_00": TemporalConstraint(t=0.0, u=0.0, l=0.0, type=ConstraintType.ACC),
-        # "pos_05": TemporalConstraint(t=0.4, u=0.5, l=0.5, type=ConstraintType.POS),
-        "pos_10": TemporalConstraint(t=0.8, u=1.0, l=1.0, type=ConstraintType.POS),
+        "pos_05": TemporalConstraint(t=0.5, u=0.5, l=0.5, type=ConstraintType.POS),
+        "pos_10": TemporalConstraint(t=1.0, u=1.0, l=1.0, type=ConstraintType.POS),
         "vel_10": TemporalConstraint(t=1.0, u=0.0, l=0.0, type=ConstraintType.VEL),
         "acc_10": TemporalConstraint(t=1.0, u=0.0, l=0.0, type=ConstraintType.ACC)
     }
@@ -151,8 +125,8 @@ class PoseProblem:
         constraint_dict.constraint_dict["acc_00"].u = constraint_dict.constraint_dict["acc_00"].l
 
         # Mid pose
-        # constraint_dict.constraint_dict["pos_05"].l = end_point_pose.mid_pose.pos[index]
-        # constraint_dict.constraint_dict["pos_05"].u = constraint_dict.constraint_dict["pos_05"].l
+        constraint_dict.constraint_dict["pos_05"].l = end_point_pose.mid_pose.pos[index]
+        constraint_dict.constraint_dict["pos_05"].u = constraint_dict.constraint_dict["pos_05"].l
 
         # End pose
         constraint_dict.constraint_dict["pos_10"].l = end_point_pose.end_pose.pos[index]
