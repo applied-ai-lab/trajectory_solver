@@ -10,22 +10,29 @@ def test():
 
     namespace = [HandEnum.LEFT, HandEnum.RIGHT]
 
-    spline_N = 6
+    spline_N = 8
     spline_N1 = spline_N + 1
     pose_problem = PoseProblem(namespace, spline_N, True)
 
-    pose_problem.create(verbose=False)
+    pose_problem.create(verbose=True)
 
     pose_problem.initialise()
 
     poses = {HandEnum.LEFT: EndPointPose(), 
              HandEnum.RIGHT: EndPointPose()}
 
-    poses[HandEnum.RIGHT].mid_pose.pos = 0.15 * np.ones(6)
-    poses[HandEnum.LEFT].mid_pose.pos = 0.15 * np.ones(6)
 
-    poses[HandEnum.RIGHT].end_pose.pos = 0.1 * np.ones(6)
-    poses[HandEnum.LEFT].end_pose.pos = 0.1 * np.ones(6)
+    poses[HandEnum.RIGHT].init_pose.pos = 3.1 * np.ones(6)
+    poses[HandEnum.LEFT].init_pose.pos = 3.1 * np.ones(6)
+
+    poses[HandEnum.RIGHT].init_pose.vel = 0.15 * np.ones(6)
+    poses[HandEnum.LEFT].init_pose.vel = 0.15 * np.ones(6)
+
+    poses[HandEnum.RIGHT].mid_pose.pos = -0.15 * np.ones(6)
+    poses[HandEnum.LEFT].mid_pose.pos = -0.15 * np.ones(6)
+
+    poses[HandEnum.RIGHT].end_pose.pos = 1.1 * np.ones(6)
+    poses[HandEnum.LEFT].end_pose.pos = 1.1 * np.ones(6)
 
     spline_params = pose_problem.advance(poses)
 

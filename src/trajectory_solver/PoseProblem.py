@@ -59,12 +59,12 @@ class PoseProblem:
 
         pose_names = ["x", "y", "z", "th_x", "th_y", "th_z"]
 
-        self.constraint_name_struct = DualArmNames(namespace, pose_names)
+        self._constraint_name_struct = DualArmNames(namespace, pose_names)
 
         # A list of all the constraint names
-        self.constraint_names = self.constraint_name_struct.all_names_lst
+        self.constraint_names = self._constraint_name_struct.all_names_lst
         # A dictionary containing all the contraint names using the namespace as a key
-        self.namespaced_names_dict = self.constraint_name_struct.namespace_dict
+        self.namespaced_names_dict = self._constraint_name_struct.namespace_dict
         # Dictionary of all the NamedTemporalConstraints with the constraint names as keys
         self.named_constraints = self.create_named_constraints()
 

@@ -1,4 +1,11 @@
+from enum import Enum
+
 import numpy as np
+
+
+class SplineTimeEnum(Enum):
+    TIMES = 0
+    SPLINES = 1
 
 
 class Splines:
