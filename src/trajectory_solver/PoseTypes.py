@@ -33,3 +33,6 @@ class EndPointPose:
         self.end_pose = PoseVelAcc(np.zeros(6),
                                    np.zeros(6),
                                    np.zeros(6))
+        
+class PoseNames:
+    name_list = ["x", "y", "z", "th_x", "th_y", "th_z"]

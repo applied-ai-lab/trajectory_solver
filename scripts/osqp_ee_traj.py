@@ -1,5 +1,6 @@
-import numpy as np
+from time import process_time 
 
+import numpy as np
 from matplotlib import pyplot as plt
 
 from trajectory_solver.EeTrajOpt import (EeTrajOpt, HandEnum, 
@@ -12,7 +13,9 @@ def test():
     namespace = [HandEnum.LEFT, HandEnum.RIGHT]
 
     spline_N = 8
-    spline_N1 = spline_N + 1
+
+    dt = 0.1
+    duration = 4.0
 
     ee_traj = EeTrajOpt(namespace, spline_N, True)
     ee_traj.create(verbose=False)
@@ -22,67 +25,81 @@ def test():
     poses = {HandEnum.LEFT: EndPointPose(), 
              HandEnum.RIGHT: EndPointPose()}
 
+    relative_times = RelativeTimings(-np.pi / 2.0, duration, dt)
 
-    poses[HandEnum.RIGHT].init_pose.pos = 0.4 * np.ones(6)
-    poses[HandEnum.LEFT].init_pose.pos = -0.4 * np.ones(6)
+    t1_start = process_time()
 
-    poses[HandEnum.RIGHT].init_pose.vel = 0. * np.ones(6)
-    poses[HandEnum.LEFT].init_pose.vel = 0. * np.ones(6)
+    no_runs = 1000
+    for k in range(no_runs):
+        if k % 2 == 0:
+            poses[HandEnum.RIGHT].init_pose.pos = 0.6 * np.ones(6)
+            poses[HandEnum.LEFT].init_pose.pos = -0.6 * np.ones(6)
 
-    poses[HandEnum.RIGHT].mid_pose.pos = 0.15 * np.ones(6)
-    poses[HandEnum.LEFT].mid_pose.pos = -0.15 * np.ones(6)
+            poses[HandEnum.RIGHT].init_pose.vel = 0. * np.ones(6)
+            poses[HandEnum.LEFT].init_pose.vel = 0. * np.ones(6)
 
-    poses[HandEnum.RIGHT].end_pose.pos = 0.0 * np.ones(6)
-    poses[HandEnum.LEFT].end_pose.pos = 0.0 * np.ones(6)
+            poses[HandEnum.RIGHT].mid_pose.pos = 0.15 * np.ones(6)
+            poses[HandEnum.LEFT].mid_pose.pos = -0.15 * np.ones(6)
 
-    relative_times = RelativeTimings(-np.pi / 2.0, 20, 0.02)
+            poses[HandEnum.RIGHT].end_pose.pos = 0.0 * np.ones(6)
+            poses[HandEnum.LEFT].end_pose.pos = 0.0 * np.ones(6)
+        else:
+            poses[HandEnum.RIGHT].init_pose.pos = 0.0 * np.ones(6)
+            poses[HandEnum.LEFT].init_pose.pos = -0.0 * np.ones(6)
 
-    timed_splines = ee_traj.advance(poses, relative_times)
+            poses[HandEnum.RIGHT].init_pose.vel = 0. * np.ones(6)
+            poses[HandEnum.LEFT].init_pose.vel = 0. * np.ones(6)
 
+            poses[HandEnum.RIGHT].mid_pose.pos = 0.15 * np.ones(6)
+            poses[HandEnum.LEFT].mid_pose.pos = -0.15 * np.ones(6)
 
-    spline_params = timed_splines[SplineTimeEnum.SPLINES]
-    times = timed_splines[SplineTimeEnum.TIMES]
+            poses[HandEnum.RIGHT].end_pose.pos = 0.6 * np.ones(6)
+            poses[HandEnum.LEFT].end_pose.pos = -0.6 * np.ones(6)
 
-    import pdb
-    pdb.set_trace()
+        # Advance ee trajectory
+        timed_splines_class = ee_traj.advance(poses, relative_times)
 
-
-    pos_l = np.zeros(len(times[HandEnum.LEFT]))
-    vel_l = np.zeros(len(times[HandEnum.LEFT]))
-    acc_l = np.zeros(len(times[HandEnum.LEFT]))
-
-    pos_r = np.zeros(len(times[HandEnum.RIGHT]))
-    pos_pred = np.zeros(len(times[HandEnum.RIGHT]))
-    vel_r = np.zeros(len(times[HandEnum.RIGHT]))
-    acc_r = np.zeros(len(times[HandEnum.RIGHT]))
-
-    for k in range(len(times[HandEnum.LEFT])):
-        pos_l[k] = spline_params[HandEnum.LEFT]['LEFT_x'].pos(times[HandEnum.LEFT][k])
-        vel_l[k] = spline_params[HandEnum.LEFT]['LEFT_x'].vel(times[HandEnum.LEFT][k])
-        acc_l[k] = spline_params[HandEnum.LEFT]['LEFT_x'].acc(times[HandEnum.LEFT][k])
+    # Stop the stopwatch / counter 
+    t1_stop = process_time() 
     
-    for k in range(len(times[HandEnum.RIGHT])):
-        pos_r[k] = spline_params[HandEnum.RIGHT]['RIGHT_x'].pos(times[HandEnum.RIGHT][k])
-        vel_r[k] = spline_params[HandEnum.RIGHT]['RIGHT_x'].vel(times[HandEnum.RIGHT][k])
-        acc_r[k] = spline_params[HandEnum.RIGHT]['RIGHT_x'].acc(times[HandEnum.RIGHT][k])
+    print("Elapsed time:", t1_start, t1_stop)  
+    print("Elapsed time per update in seconds:", (t1_stop-t1_start) / no_runs)  
 
-    pos_pred[0] = pos_r[0]
-    for k in range(1, len(times[HandEnum.RIGHT]), 1):
-        pos_pred[k] = pos_pred[k - 1] + relative_times.dt * vel_r[k - 1]
+    # Get trajectories
+    traj_dict = timed_splines_class.traj(0.0, duration)
+
+
+    pos_l = traj_dict[HandEnum.LEFT].pos
+    vel_l = traj_dict[HandEnum.LEFT].vel
+    acc_l = traj_dict[HandEnum.LEFT].acc
+    
+    pos_r = traj_dict[HandEnum.RIGHT].pos
+    vel_r = traj_dict[HandEnum.RIGHT].vel
+    acc_r = traj_dict[HandEnum.RIGHT].acc
+
+    pos_pred = np.zeros(pos_l.shape[0])
+    vel_pred = np.zeros(pos_l.shape[0])
+
+    pos_pred[0] = pos_r[0, 0]
+    vel_pred[0] = vel_r[0, 0]
+    for k in range(1, pos_pred.shape[0], 1):
+        pos_pred[k] = pos_pred[k - 1] + dt * vel_r[k - 1, 0]
+        vel_pred[k] = vel_pred[k - 1] + dt * acc_r[k - 1, 0]
 
     _, axes = plt.subplots(3, 1)
-    axes[0].plot(pos_l)
-    axes[0].plot(pos_r)
-    axes[0].plot(pos_pred)
+    axes[0].plot(pos_l[:, 0])
+    axes[0].plot(pos_r[:, 0])
+    axes[0].plot(pos_pred, '*')
 
     axes[0].set_title("Position")
 
-    axes[1].plot(vel_l)
-    axes[1].plot(vel_r)
+    axes[1].plot(vel_l[:, 0])
+    axes[1].plot(vel_r[:, 0])
+    axes[1].plot(vel_pred, '*')
     axes[1].set_title("Velcity")
 
-    axes[2].plot(acc_l)
-    axes[2].plot(acc_r)
+    axes[2].plot(acc_l[:, 0])
+    axes[2].plot(acc_r[:, 0])
     axes[2].set_title("Acceleration")
 
     plt.show()

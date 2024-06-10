@@ -3,7 +3,7 @@ import copy
 
 import osqp
 
-from trajectory_solver.PoseTypes import (HandEnum, EndPointPose)
+from trajectory_solver.PoseTypes import (HandEnum, EndPointPose, PoseNames)
 from trajectory_solver.SimultaneousProgram import (SimultaneousProgram, NamedTemporalConstraint, 
                                                    TemporalConstraint, ConstraintType)
 
@@ -57,7 +57,7 @@ class PoseProblem:
         
         self.end_point_problem = EndPointProblem()
 
-        pose_names = ["x", "y", "z", "th_x", "th_y", "th_z"]
+        pose_names = PoseNames.name_list
 
         self._constraint_name_struct = DualArmNames(namespace, pose_names)
 
