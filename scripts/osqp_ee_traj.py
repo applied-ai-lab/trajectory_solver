@@ -4,8 +4,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from trajectory_solver.EeTrajOpt import (EeTrajOpt, HandEnum, 
-                                         EndPointPose, SplineTimeEnum, 
-                                         RelativeTimings)
+                                         EndPointPose, RelativeTimings)
+
 
 
 def test():
@@ -66,7 +66,7 @@ def test():
     print("Elapsed time per update in seconds:", (t1_stop-t1_start) / no_runs)  
 
     # Get trajectories
-    traj_dict = timed_splines_class.traj(0.0, duration)
+    traj_dict = timed_splines_class.traj(0.0, duration + 2.0)
 
 
     pos_l = traj_dict[HandEnum.LEFT].pos

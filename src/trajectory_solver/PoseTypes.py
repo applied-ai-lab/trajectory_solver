@@ -22,6 +22,12 @@ class RelativeTimings:
         self.dt = dt
 
 
+class TimingIndices:
+    def __init__(self) -> None:
+        self.indices = np.array([0])
+        self.duration = 0.0
+
+
 class EndPointPose:
     def __init__(self) -> None:
         self.init_pose = PoseVelAcc(np.zeros(6),

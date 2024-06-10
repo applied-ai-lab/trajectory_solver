@@ -7,7 +7,7 @@ import numpy as np
 from trajectory_solver.Splines import (Splines, SplineTimeEnum)
 from trajectory_solver.PoseTypes import (HandEnum, EndPointPose, 
                                          RelativeTimings, PoseNames,
-                                         PoseVelAcc)
+                                         PoseVelAcc, TimingIndices)
 from trajectory_solver.PoseProblem import PoseProblem
 
 
@@ -21,9 +21,6 @@ class TimeAndSplines:
 
         self._pose_names = PoseNames.name_list
 
-        self._vel_scaling = 1.0  / self._timings.duration
-        self._acc_scaling = self._vel_scaling ** 2.0
-
     def create_times(self) -> Dict[HandEnum, np.array]:
         times_dict = dict()
         for name in self._spline_dict.keys():
@@ -33,7 +30,9 @@ class TimeAndSplines:
             elif name == HandEnum.RIGHT:
                 duration -= (0.25 * self._timings.phase_offset / np.pi) * self._timings.duration
 
-            times_dict[name] = np.arange(0.0, self._timings.duration + self._timings.dt, self._timings.dt) / self._timings.duration
+            times_dict[name] = TimingIndices()
+            times_dict[name].indices =  np.arange(0.0, duration + self._timings.dt, self._timings.dt) / duration
+            times_dict[name].duration = duration
         return times_dict
     
     @property
@@ -41,16 +40,13 @@ class TimeAndSplines:
         return {SplineTimeEnum.SPLINES: self._spline_dict,
                 SplineTimeEnum.TIMES: self._times}
 
-    @property
-    def vel_scaling(self):
-        self._vel_scaling = 1.0  / self._timings.duration
-        return self._vel_scaling
+    @staticmethod
+    def vel_scaling(duration):
+        return 1.0  / duration
     
-    @property
-    def acc_scaling(self):
-        self._acc_scaling = (1.0 / self._timings.duration) ** 2.0
-        return self._acc_scaling
-
+    @staticmethod
+    def acc_scaling(duration):
+        return (1.0 / duration) ** 2.0
     
     # Return pos, vel and acc 
     def traj(self, start_t: float, stop_t: float):
@@ -69,11 +65,16 @@ class TimeAndSplines:
             for dim, pose_name in enumerate(self._pose_names):
                 spline_name = name.value + "_" + pose_name
                 for k in range(duration):
-
-                    t = self._times[name][start_index + k]
-                    pos[k, dim] = spline[spline_name].pos(t)
-                    vel[k, dim] = self.vel_scaling * spline[spline_name].vel(t)
-                    acc[k, dim] = self.acc_scaling * spline[spline_name].acc(t)
+                    
+                    if k < self._times[name].indices.shape[0]:
+                        t = self._times[name].indices[start_index + k]
+                        pos[k, dim] = spline[spline_name].pos(t)
+                        vel[k, dim] = self.vel_scaling(self._times[name].duration) * spline[spline_name].vel(t)
+                        acc[k, dim] = self.acc_scaling(self._times[name].duration) * spline[spline_name].acc(t)
+                    else:
+                        pos[k, dim] = pos[k - 1, dim]
+                        vel[k, dim] = 0.0 * vel[k - 1, dim]
+                        acc[k, dim] = 0.0 * acc[k - 1, dim]
                 
                 traj_dict[name] = PoseVelAcc(pos, vel, acc)
         
