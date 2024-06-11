@@ -7,7 +7,6 @@ from trajectory_solver.EeTrajOpt import (EeTrajOpt, HandEnum,
                                          EndPointPose, RelativeTimings)
 
 
-
 def test():
 
     namespace = [HandEnum.LEFT, HandEnum.RIGHT]
@@ -25,7 +24,7 @@ def test():
     poses = {HandEnum.LEFT: EndPointPose(), 
              HandEnum.RIGHT: EndPointPose()}
 
-    relative_times = RelativeTimings(-np.pi / 2.0, duration, dt)
+    relative_times = RelativeTimings(np.pi / 4.0, duration, dt)
 
     t1_start = process_time()
 
@@ -57,7 +56,7 @@ def test():
             poses[HandEnum.LEFT].end_pose.pos = -0.6 * np.ones(6)
 
         # Advance ee trajectory
-        timed_splines_class = ee_traj.advance(poses, relative_times)
+        timed_splines = ee_traj.advance(poses, relative_times)
 
     # Stop the stopwatch / counter 
     t1_stop = process_time() 
@@ -66,7 +65,7 @@ def test():
     print("Elapsed time per update in seconds:", (t1_stop-t1_start) / no_runs)  
 
     # Get trajectories
-    traj_dict = timed_splines_class.traj(0.0, duration + 2.0)
+    traj_dict = timed_splines.traj(0.0, duration)
 
 
     pos_l = traj_dict[HandEnum.LEFT].pos

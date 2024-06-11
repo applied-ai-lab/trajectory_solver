@@ -25,10 +25,10 @@ class TimeAndSplines:
         times_dict = dict()
         for name in self._spline_dict.keys():
             duration = copy.deepcopy(self._timings.duration)
-            if name == HandEnum.LEFT:
-                duration += (0.25 * self._timings.phase_offset / np.pi) * self._timings.duration
-            elif name == HandEnum.RIGHT:
-                duration -= (0.25 * self._timings.phase_offset / np.pi) * self._timings.duration
+            if name == HandEnum.LEFT and self._timings.phase_offset > 0:
+                duration -= (0.5 * self._timings.phase_offset / np.pi) * self._timings.duration
+            elif name == HandEnum.RIGHT and self._timings.phase_offset < 0:
+                duration += (0.5 * self._timings.phase_offset / np.pi) * self._timings.duration
 
             times_dict[name] = TimingIndices()
             times_dict[name].indices =  np.arange(0.0, duration + self._timings.dt, self._timings.dt) / duration
