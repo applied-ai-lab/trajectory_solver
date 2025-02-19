@@ -7,19 +7,21 @@ import numpy as np
 from trajectory_solver.Splines import (Splines, SplineTimeEnum)
 from trajectory_solver.PoseTypes import (HandEnum, EndPointPose, 
                                          RelativeTimings, PoseNames,
+                                         JointAngles, JointNames,
                                          PoseVelAcc, TimingIndices)
 from trajectory_solver.PoseProblem import PoseProblem
+from trajectory_solver.JointSpaceProblem import JointSpaceProblem
 
 
 class TimeAndSplines:
-    def __init__(self, spline_dict: Dict[HandEnum, Splines], timings: RelativeTimings) -> None:
+    def __init__(self, spline_dict: Dict[HandEnum, Splines], timings: RelativeTimings, pose_names=PoseNames.name_list) -> None:
         self._spline_dict = spline_dict
         self._timings = timings
         self._times = self.create_times()
         self._out = None
         self._dt = timings.dt
 
-        self._pose_names = PoseNames.name_list
+        self._pose_names = pose_names
 
     def create_times(self) -> Dict[HandEnum, np.array]:
         times_dict = dict()
@@ -82,16 +84,18 @@ class TimeAndSplines:
     
 
 class EeTrajOpt:
-    def __init__(self, namespace=[HandEnum.LEFT, HandEnum.RIGHT], N=6, const_A=True) -> None:
+    def __init__(self, namespace=[HandEnum.LEFT, HandEnum.RIGHT], N=6, const_A=True, problem_type=PoseProblem, pose_names=PoseNames.name_list) -> None:
         self._namespace = namespace
         self._N = N
         # self._pose_dict = self.create_pose_dict()
-        self._pose_problem = PoseProblem(namespace, N, const_A)
+        self._pose_problem = problem_type(namespace, N, const_A)
 
         self._splines = self.create_splines()
         self._namespaced_splines = self.create_namespaced_splines(self._splines)
 
         self._coeffs = np.zeros(N + 1) 
+        
+        self._pose_names = pose_names
 
     def create(self, verbose=False):
         self._pose_problem.create(verbose)
@@ -104,7 +108,7 @@ class EeTrajOpt:
         self.update_splines(self._coeffs)
 
         # Update spline map (Should not be necessary)
-        return TimeAndSplines(self._namespaced_splines, timings)
+        return TimeAndSplines(self._namespaced_splines, timings, self._pose_names)
 
     def initialise(self):
         return

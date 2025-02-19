@@ -42,3 +42,21 @@ class EndPointPose:
         
 class PoseNames:
     name_list = ["x", "y", "z", "th_x", "th_y", "th_z"]
+    
+
+class JointAngles:
+    def __init__(self, dof=7) -> None:
+        self.init_q = PoseVelAcc(np.zeros(dof),
+                                    np.zeros(dof),
+                                    np.zeros(dof))
+        self.mid_q = PoseVelAcc(np.zeros(dof),
+                                   np.zeros(dof),
+                                   np.zeros(dof))
+        self.end_q = PoseVelAcc(np.zeros(dof),
+                                   np.zeros(dof),
+                                   np.zeros(dof))
+        
+
+class JointNames:
+    def __init__(self, dof=7):
+        self.name_list = list("q" + str(k) for k in range(dof))
