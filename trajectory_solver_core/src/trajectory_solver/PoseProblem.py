@@ -9,10 +9,8 @@ from trajectory_solver.SimultaneousProgram import (SimultaneousProgram, NamedTem
                                                    TemporalConstraint, ConstraintType)
 
 
-class EndPointProblem:
-    def __init__(self) -> None:
-            
-        self.constraint_dict = {
+class EndPointProblem:    
+        constraint_dict = {
         "pos_00": TemporalConstraint(t=0.0, u=0.0, l=0.0, type=ConstraintType.POS),
         "vel_00": TemporalConstraint(t=0.0, u=0.0, l=0.0, type=ConstraintType.VEL),
         "acc_00": TemporalConstraint(t=0.0, u=0.0, l=0.0, type=ConstraintType.ACC),
@@ -25,9 +23,9 @@ class EndPointProblem:
 
 
 class PoseProblem:
-    def __init__(self, namespace:List[HandEnum], N=6, const_A=True) -> None:
+    def __init__(self, namespace:List[HandEnum], N=6, const_A=True, constraints=EndPointProblem) -> None:
         
-        self.end_point_problem = EndPointProblem()
+        self.end_point_problem = constraints
 
         pose_names = PoseNames.name_list
 

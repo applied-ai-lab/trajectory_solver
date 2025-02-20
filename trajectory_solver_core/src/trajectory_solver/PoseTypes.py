@@ -46,6 +46,7 @@ class PoseNames:
 
 class JointAngles:
     def __init__(self, dof=7) -> None:
+        self.dof = dof
         self.init_q = PoseVelAcc(np.zeros(dof),
                                     np.zeros(dof),
                                     np.zeros(dof))
