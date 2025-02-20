@@ -3,14 +3,14 @@ import copy
 
 import osqp
 
-from trajectory_solver.PoseTypes import (HandEnum, EndPointPose, PoseNames)
+from trajectory_solver.PoseTypes import (HandEnum, JointAngles, JointNames)
 from trajectory_solver.DualArmNames import DualArmNames
 from trajectory_solver.SimultaneousProgram import (SimultaneousProgram, NamedTemporalConstraint, 
                                                    TemporalConstraint, ConstraintType)
 
 
-class EndPointProblem:    
-        constraint_dict = {
+class EndPointProblem:
+    constraint_dict = {
         "pos_00": TemporalConstraint(t=0.0, u=0.0, l=0.0, type=ConstraintType.POS),
         "vel_00": TemporalConstraint(t=0.0, u=0.0, l=0.0, type=ConstraintType.VEL),
         "acc_00": TemporalConstraint(t=0.0, u=0.0, l=0.0, type=ConstraintType.ACC),
@@ -22,14 +22,16 @@ class EndPointProblem:
 
 
 
-class PoseProblem:
-    def __init__(self, namespace:List[HandEnum], N=6, const_A=True, constraints=EndPointProblem) -> None:
+class JointSpaceProblem:
+    def __init__(self, namespace:List[HandEnum], N=6, const_A=True, constraints=EndPointProblem, dof=7) -> None:
         
-        self.end_point_problem = constraints
+        self.end_point_problem = constraints()
 
-        pose_names = PoseNames.name_list
+        self.pose_names = JointNames(dof).name_list
+        
+        self._dof = dof
 
-        self._constraint_name_struct = DualArmNames(namespace, pose_names)
+        self._constraint_name_struct = DualArmNames(namespace, self.pose_names)
 
         # A list of all the constraint names
         self.constraint_names = self._constraint_name_struct.all_names_lst
@@ -60,10 +62,10 @@ class PoseProblem:
     def reset(self):
         return
 
-    def advance(self, end_point_poses: Dict[HandEnum, EndPointPose]):
+    def advance(self, end_point_poses: Dict[HandEnum, JointAngles]):
         # Update the constraints
         for key, item in end_point_poses.items():
-            for k in range(6):
+            for k in range(self._dof):
                 self.update_constraints(k, self.named_constraints[self.namespaced_names_dict[key][k]], item)
         # Advance the internal program matrices
         self.program.advance(self.named_constraints.values())
@@ -83,27 +85,31 @@ class PoseProblem:
             named_constraints[name] = (NamedTemporalConstraint(name, copy.deepcopy(self.end_point_problem.constraint_dict)))
         return named_constraints
 
-    def update_constraints(self, index: int, constraint_dict: Dict[str, TemporalConstraint], end_point_pose: EndPointPose):
+    def update_constraints(self, index: int, constraint_dict: Dict[str, TemporalConstraint], end_point_pose: JointAngles):
         # Init pose
-        constraint_dict.constraint_dict["pos_00"].l = end_point_pose.init_pose.pos[index]
+        constraint_dict.constraint_dict["pos_00"].l = end_point_pose.init_q.pos[index]
         constraint_dict.constraint_dict["pos_00"].u = constraint_dict.constraint_dict["pos_00"].l
         
-        constraint_dict.constraint_dict["vel_00"].l = end_point_pose.init_pose.vel[index]
+        constraint_dict.constraint_dict["vel_00"].l = end_point_pose.init_q.vel[index]
         constraint_dict.constraint_dict["vel_00"].u = constraint_dict.constraint_dict["vel_00"].l
 
-        constraint_dict.constraint_dict["acc_00"].l = end_point_pose.init_pose.acc[index]
+        constraint_dict.constraint_dict["acc_00"].l = end_point_pose.init_q.acc[index]
         constraint_dict.constraint_dict["acc_00"].u = constraint_dict.constraint_dict["acc_00"].l
 
         # Mid pose
-        constraint_dict.constraint_dict["pos_05"].l = end_point_pose.mid_pose.pos[index]
+        constraint_dict.constraint_dict["pos_05"].l = end_point_pose.mid_q.pos[index]
         constraint_dict.constraint_dict["pos_05"].u = constraint_dict.constraint_dict["pos_05"].l
 
         # End pose
-        constraint_dict.constraint_dict["pos_10"].l = end_point_pose.end_pose.pos[index]
+        constraint_dict.constraint_dict["pos_10"].l = end_point_pose.end_q.pos[index]
         constraint_dict.constraint_dict["pos_10"].u = constraint_dict.constraint_dict["pos_10"].l
         
-        constraint_dict.constraint_dict["vel_10"].l = end_point_pose.end_pose.vel[index]
+        constraint_dict.constraint_dict["vel_10"].l = end_point_pose.end_q.vel[index]
         constraint_dict.constraint_dict["vel_10"].u = constraint_dict.constraint_dict["vel_10"].l
 
-        constraint_dict.constraint_dict["acc_10"].l = end_point_pose.end_pose.acc[index]
+        constraint_dict.constraint_dict["acc_10"].l = end_point_pose.end_q.acc[index]
         constraint_dict.constraint_dict["acc_10"].u = constraint_dict.constraint_dict["acc_10"].l
+
+    @property
+    def dof(self):
+        return self._dof
