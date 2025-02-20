@@ -4,7 +4,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from trajectory_solver.EeTrajOpt import (EeTrajOpt, HandEnum, JointSpaceProblem, JointNames,
-                                         JointAngles, RelativeTimings)
+                                         EndPointProblem, JointAngles, RelativeTimings)
 
 
 def test():
@@ -18,7 +18,7 @@ def test():
     
     dof = 7
 
-    ee_traj = EeTrajOpt(namespace, spline_N, True, JointSpaceProblem, JointNames(dof).name_list)
+    ee_traj = EeTrajOpt(namespace, spline_N, True, JointSpaceProblem, EndPointProblem, JointNames(dof).name_list)
     ee_traj.create(verbose=False)
 
     ee_traj.initialise()
