@@ -44,10 +44,12 @@ class TimeAndSplines:
 
     @staticmethod
     def vel_scaling(duration):
+        assert duration > 0
         return 1.0  / duration
     
     @staticmethod
     def acc_scaling(duration):
+        assert duration > 0
         return (1.0 / duration) ** 2.0
     
     # Return pos, vel and acc 
